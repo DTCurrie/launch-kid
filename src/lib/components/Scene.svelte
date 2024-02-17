@@ -1,81 +1,90 @@
 <script lang="ts">
-  import { T } from '@threlte/core'
-  import { ContactShadows, Float, Grid, OrbitControls } from '@threlte/extras'
+	import { T, useTask, useThrelte } from '@threlte/core';
+	import { ContactShadows, Grid, OrbitControls, interactivity } from '@threlte/extras';
+	import { AutoColliders, CollisionGroups, Debug } from '@threlte/rapier';
+	import { Mesh, Vector3 } from 'three';
+	import Ground from './Ground.svelte';
+	import Player from './Player.svelte';
+	import { spring } from 'svelte/motion';
+
+	interactivity();
+
+	const { size } = useThrelte();
+
+	const smoothPlayerPosX = spring(0);
+	const smoothPlayerPosZ = spring(0);
+	const t3 = new Vector3();
+
+	let playerMesh: Mesh;
+	let positionHasBeenSet = false;
+
+	$: zoom = $size.width / 8;
+
+	useTask(() => {
+		if (!playerMesh) return;
+		playerMesh.getWorldPosition(t3);
+
+		smoothPlayerPosX.set(t3.x, {
+			hard: !positionHasBeenSet
+		});
+
+		smoothPlayerPosZ.set(t3.z, {
+			hard: !positionHasBeenSet
+		});
+
+		if (!positionHasBeenSet) {
+			positionHasBeenSet = true;
+		}
+	});
 </script>
 
-<T.PerspectiveCamera
-  makeDefault
-  position={[-10, 10, 10]}
-  fov={15}
->
-  <OrbitControls
-    autoRotate
-    enableZoom={false}
-    enableDamping
-    autoRotateSpeed={0.5}
-    target.y={1.5}
-  />
-</T.PerspectiveCamera>
+<!-- Helpers -->
+<Debug depthTest={false} depthWrite={false} />
+<T.GridHelper args={[50]} position.y={0.01} />
 
-<T.DirectionalLight
-  intensity={0.8}
-  position.x={5}
-  position.y={10}
-/>
+<T.Group position.y={0.9} let:ref={target}>
+	<T.OrthographicCamera
+		{zoom}
+		makeDefault
+		position={[50, 50, 30]}
+		on:create={({ ref }) => {
+			ref.lookAt(target.getWorldPosition(new Vector3()));
+		}}
+	>
+		<OrbitControls
+			enableDamping
+			enableZoom={false}
+			enablePan={false}
+			maxPolarAngle={Math.PI / 2}
+			target.x={$smoothPlayerPosX}
+			target.y={target.position.y}
+			target.z={$smoothPlayerPosZ}
+		/>
+	</T.OrthographicCamera>
+</T.Group>
+
+<!-- Light -->
+<T.DirectionalLight intensity={0.8} position.x={5} position.y={10} />
 <T.AmbientLight intensity={0.2} />
+<!-- <ContactShadows scale={10} blur={2} far={2.5} opacity={0.5} /> -->
 
-<Grid
-  position.y={-0.001}
-  cellColor="#ffffff"
-  sectionColor="#ffffff"
-  sectionThickness={0}
-  fadeDistance={25}
-  cellSize={2}
-/>
+<!--
+	The ground needs to be on both group 15 which is the group
+	to detect the groundedness of the player as well as on group
+	0 which is the group that the player is actually physically
+	interacting with.
+ -->
+<CollisionGroups groups={[0, 15]}>
+	<Ground />
+</CollisionGroups>
 
-<ContactShadows
-  scale={10}
-  blur={2}
-  far={2.5}
-  opacity={0.5}
-/>
+<!--
+	All physically interactive stuff should be on group 0
+-->
+<CollisionGroups groups={[0]}>
+	<Player bind:mesh={playerMesh} position={[0, 2, -3]} />
 
-<Float
-  floatIntensity={1}
-  floatingRange={[0, 1]}
->
-  <T.Mesh
-    position.y={1.2}
-    position.z={-0.75}
-  >
-    <T.BoxGeometry />
-    <T.MeshStandardMaterial color="#0059BA" />
-  </T.Mesh>
-</Float>
-
-<Float
-  floatIntensity={1}
-  floatingRange={[0, 1]}
->
-  <T.Mesh
-    position={[1.2, 1.5, 0.75]}
-    rotation.x={5}
-    rotation.y={71}
-  >
-    <T.TorusKnotGeometry args={[0.5, 0.15, 100, 12, 2, 3]} />
-    <T.MeshStandardMaterial color="#F85122" />
-  </T.Mesh>
-</Float>
-
-<Float
-  floatIntensity={1}
-  floatingRange={[0, 1]}
->
-  <T.Mesh
-    position={[-1.4, 1.5, 0.75]}
-    rotation={[-5, 128, 10]}
-  >
-    <T.IcosahedronGeometry />
-    <T.MeshStandardMaterial color="#F8EBCE" />
-  </T.Mesh>
-</Float>
+	<AutoColliders>
+		<!-- Scenery objects go here -->
+	</AutoColliders>
+</CollisionGroups>
