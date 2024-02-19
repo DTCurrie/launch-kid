@@ -11,29 +11,34 @@
 
 	const { size } = useThrelte();
 
-	const smoothPlayerPosX = spring(0);
-	const smoothPlayerPosZ = spring(0);
 	const playerPosition = new Vector3();
+	const playerForward = new Vector3();
 
-	let positionHasBeenSet = false;
+	const smoothPlayerPosX = spring(0);
+	const smoothPlayerPosY = spring(0);
+	const smoothPlayerPosZ = spring(0);
 
-	$: zoom = $size.width / 8;
+	const cameraPosition = new Vector3();
+	const cameraOffset = new Vector3(-100, 1, -100);
+
+	const smoothCameraPosX = spring(0);
+	const smoothCameraPosZ = spring(0);
+
+	$: zoom = $size.width / 100;
 
 	const cameraFollow = (mesh?: Mesh) => {
 		if (!mesh) return;
 		mesh.getWorldPosition(playerPosition);
+		mesh.getWorldDirection(playerForward);
 
-		smoothPlayerPosX.set(playerPosition.x, {
-			hard: !positionHasBeenSet
-		});
+		smoothPlayerPosX.set(playerPosition.x, {});
+		smoothPlayerPosY.set(playerPosition.y, {});
+		smoothPlayerPosZ.set(playerPosition.z, {});
 
-		smoothPlayerPosZ.set(playerPosition.z, {
-			hard: !positionHasBeenSet
-		});
+		cameraPosition.addVectors(playerPosition, playerForward.multiply(cameraOffset));
 
-		if (!positionHasBeenSet) {
-			positionHasBeenSet = true;
-		}
+		smoothCameraPosX.set(cameraPosition.x, {});
+		smoothCameraPosZ.set(cameraPosition.z, {});
 	};
 </script>
 
@@ -41,25 +46,20 @@
 <Debug depthTest={false} depthWrite={false} />
 <T.GridHelper args={[50]} position.y={0.01} />
 
-<T.Group position.y={0.9} let:ref={target}>
-	<T.OrthographicCamera
-		{zoom}
-		makeDefault
-		position={[50, 50, 30]}
-		on:create={({ ref }) => {
-			ref.lookAt(target.getWorldPosition(new Vector3()));
-		}}
-	>
+<T.Group position.y={0.9}>
+	<T.PerspectiveCamera {zoom} makeDefault position={[$smoothCameraPosX, 30, $smoothCameraPosZ]}>
 		<OrbitControls
 			enableDamping
-			enableZoom={false}
+			enableRotate={false}
 			enablePan={false}
+			minDistance={zoom * 5}
+			maxDistance={zoom * 50}
 			maxPolarAngle={Math.PI / 2}
 			target.x={$smoothPlayerPosX}
-			target.y={target.position.y}
+			target.y={$smoothPlayerPosY}
 			target.z={$smoothPlayerPosZ}
 		/>
-	</T.OrthographicCamera>
+	</T.PerspectiveCamera>
 </T.Group>
 
 <!-- Light -->

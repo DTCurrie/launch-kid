@@ -112,12 +112,15 @@
 		}
 	};
 
+	const onSensorChange = (mod: 1 | -1) =>
+		transition(createGroundsSensoredChangedState($context.groundsSensored + mod));
+
 	$: if ($context.mesh && $context.rigidBody && !$context.initialized) {
 		start();
 		transition(createFloatingState());
 	}
 
-	$: console.log('player state transitioned', { ...$state });
+	$: console.debug('player state transitioned:', $state.id);
 </script>
 
 <svelte:window on:keydown|preventDefault={onKeyDown} on:keyup|preventDefault={onKeyUp} />
@@ -139,10 +142,8 @@
 					sensor
 					shape={'ball'}
 					args={[radius * 1.2]}
-					on:sensorenter={() =>
-						transition(createGroundsSensoredChangedState($context.groundsSensored + 1))}
-					on:sensorexit={() =>
-						transition(createGroundsSensoredChangedState($context.groundsSensored - 1))}
+					on:sensorenter={() => onSensorChange(1)}
+					on:sensorexit={() => onSensorChange(-1)}
 				/>
 			</T.Group>
 		</CollisionGroups>

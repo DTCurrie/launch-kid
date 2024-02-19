@@ -135,11 +135,17 @@ export const createPoweringUpState = () =>
 export const createLaunchingState = () =>
 	createPlayerState({
 		id: PLAYER_STATES.poweringUp,
-		onEnter: (_, { power, onTakeoff }, transition) => {
+		onEnter: (_, { mesh, rigidBody, forward, power, onTakeoff }, transition) => {
 			onTakeoff();
-			console.log('launch with power', power);
+			const mod = power / 10;
+
+			mesh?.getWorldDirection(forward);
+			forward.multiplyScalar(mod);
+			forward.y = mod;
+
+			rigidBody?.applyImpulse(forward, true);
 			transition(createFloatingState());
-			return { power: 0 };
+			return { rigidBody, forward, power: 0 };
 		}
 	});
 
