@@ -23,8 +23,6 @@
 
 	export let position: Parameters<Vector3['set']> | undefined = undefined;
 	export let cameraFollow: (mesh?: Mesh) => void = noop;
-	export let onGrounded: () => void = noop;
-	export let onTakeoff: () => void = noop;
 
 	const height: number = 1.7;
 	const radius: number = 0.3;
@@ -43,10 +41,7 @@
 			forward: new Vector3(),
 			velocity: new Vector3(),
 			rotation: new Vector3(),
-			movement: new Vector2(),
-
-			onGrounded,
-			onTakeoff
+			movement: new Vector2()
 		}
 	);
 

@@ -21,9 +21,6 @@ export interface PlayerStateContext {
 	velocity: Vector3;
 	rotation: Vector3;
 	movement: Vector2;
-
-	onGrounded: () => void;
-	onTakeoff: () => void;
 }
 
 export const PLAYER_STATES = {
@@ -46,10 +43,6 @@ export const createInitializingState = () =>
 export const createGroundedState = () =>
 	createPlayerState({
 		id: PLAYER_STATES.grounded,
-		onEnter: (_, { onGrounded }) => {
-			onGrounded();
-			return {};
-		},
 		run: (
 			{ mesh, rigidBody, forward, velocity, rotation, keys, movement, groundsSensored },
 			transition
@@ -135,8 +128,7 @@ export const createPoweringUpState = () =>
 export const createLaunchingState = () =>
 	createPlayerState({
 		id: PLAYER_STATES.poweringUp,
-		onEnter: (_, { mesh, rigidBody, forward, power, onTakeoff }, transition) => {
-			onTakeoff();
+		onEnter: (_, { mesh, rigidBody, forward, power }, transition) => {
 			const mod = power / 10;
 
 			mesh?.getWorldDirection(forward);
