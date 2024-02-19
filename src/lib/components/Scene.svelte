@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { T, useTask, useThrelte } from '@threlte/core';
-	import { ContactShadows, Grid, OrbitControls, interactivity } from '@threlte/extras';
+	import { T, useThrelte } from '@threlte/core';
+	import { OrbitControls, interactivity } from '@threlte/extras';
 	import { AutoColliders, CollisionGroups, Debug } from '@threlte/rapier';
 	import { Mesh, Vector3 } from 'three';
 	import Ground from './Ground.svelte';
@@ -13,29 +13,28 @@
 
 	const smoothPlayerPosX = spring(0);
 	const smoothPlayerPosZ = spring(0);
-	const t3 = new Vector3();
+	const playerPosition = new Vector3();
 
-	let playerMesh: Mesh;
 	let positionHasBeenSet = false;
 
 	$: zoom = $size.width / 8;
 
-	useTask(() => {
-		if (!playerMesh) return;
-		playerMesh.getWorldPosition(t3);
+	const cameraFollow = (mesh?: Mesh) => {
+		if (!mesh) return;
+		mesh.getWorldPosition(playerPosition);
 
-		smoothPlayerPosX.set(t3.x, {
+		smoothPlayerPosX.set(playerPosition.x, {
 			hard: !positionHasBeenSet
 		});
 
-		smoothPlayerPosZ.set(t3.z, {
+		smoothPlayerPosZ.set(playerPosition.z, {
 			hard: !positionHasBeenSet
 		});
 
 		if (!positionHasBeenSet) {
 			positionHasBeenSet = true;
 		}
-	});
+	};
 </script>
 
 <!-- Helpers -->
@@ -82,7 +81,7 @@
 	All physically interactive stuff should be on group 0
 -->
 <CollisionGroups groups={[0]}>
-	<Player bind:mesh={playerMesh} position={[0, 2, -3]} />
+	<Player position={[0, 2, -3]} {cameraFollow} />
 
 	<AutoColliders>
 		<!-- Scenery objects go here -->
