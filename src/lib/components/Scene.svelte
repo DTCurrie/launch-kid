@@ -3,9 +3,10 @@
 	import { OrbitControls, interactivity } from '@threlte/extras';
 	import { AutoColliders, CollisionGroups, Debug } from '@threlte/rapier';
 	import { Mesh, Vector3 } from 'three';
+	import { spring } from 'svelte/motion';
 	import Ground from './Ground.svelte';
 	import Player from './Player.svelte';
-	import { spring } from 'svelte/motion';
+	import { PLAYER_COLLISION_GROUPS, GROUND_COLLISION_GROUPS } from '$lib';
 
 	interactivity();
 
@@ -73,14 +74,14 @@
 	0 which is the group that the player is actually physically
 	interacting with.
  -->
-<CollisionGroups groups={[0, 15]}>
+<CollisionGroups groups={[...PLAYER_COLLISION_GROUPS, ...GROUND_COLLISION_GROUPS]}>
 	<Ground />
 </CollisionGroups>
 
 <!--
 	All physically interactive stuff should be on group 0
 -->
-<CollisionGroups groups={[0]}>
+<CollisionGroups groups={PLAYER_COLLISION_GROUPS}>
 	<Player position={[0, 2, -3]} {cameraFollow} />
 
 	<AutoColliders>

@@ -1,34 +1,27 @@
 <script lang="ts">
 	import { T, useTask } from '@threlte/core';
-	import {
-		type CollisionGroupsBitMask,
-		RigidBody,
-		CollisionGroups,
-		Collider
-	} from '@threlte/rapier';
+	import { RigidBody, CollisionGroups, Collider } from '@threlte/rapier';
 	import { CapsuleGeometry, Mesh, MeshStandardMaterial, Vector2, Vector3 } from 'three';
 	import { noop } from 'lodash-es';
-
 	import {
-		createFloatingState,
+		createStateMachine,
 		createInitializingState,
-		PLAYER_STATES,
+		playerInputs,
 		createPoweringUpState,
 		createLaunchingState,
+		createGroundsSensoredChangedState,
+		createFloatingState,
+		PLAYER_COLLISION_GROUPS,
+		PLAYER_HEIGHT,
+		PLAYER_RADIUS,
+		GROUND_COLLISION_GROUPS,
+		PLAYER_LENGTH,
 		type PlayerStateId,
-		type PlayerStateContext,
-		createGroundsSensoredChangedState
-	} from './player-state';
-	import { createStateMachine } from './state-machine';
-	import { playerInputs } from './player-inputs';
+		type PlayerStateContext
+	} from '$lib';
 
 	export let position: Parameters<Vector3['set']> | undefined = undefined;
 	export let cameraFollow: (mesh?: Mesh) => void = noop;
-
-	const height: number = 1.7;
-	const radius: number = 0.3;
-	const playerCollisionGroups: CollisionGroupsBitMask = [0];
-	const groundCollisionGroups: CollisionGroupsBitMask = [15];
 
 	const { state, context, run, transition } = createStateMachine<PlayerStateId, PlayerStateContext>(
 		createInitializingState(),
@@ -72,7 +65,8 @@
 	const onSensorChange = (mod: 1 | -1) =>
 		transition(createGroundsSensoredChangedState($context.groundsSensored + mod));
 
-	$: if ($context.mesh && $context.rigidBody && !$context.initialized) {
+	$: loaded = Boolean($context.mesh && $context.rigidBody);
+	$: if (loaded && !$context.initialized) {
 		start();
 		transition(createFloatingState());
 	}
@@ -89,29 +83,29 @@
 		enabledRotations={[false, false, false]}
 		type={'dynamic'}
 	>
-		<CollisionGroups groups={playerCollisionGroups}>
-			<Collider shape={'capsule'} args={[height / 2 - radius, radius]} />
+		<CollisionGroups groups={PLAYER_COLLISION_GROUPS}>
+			<Collider shape={'capsule'} args={[PLAYER_HEIGHT / 2 - PLAYER_RADIUS, PLAYER_RADIUS]} />
 		</CollisionGroups>
 
-		<CollisionGroups groups={groundCollisionGroups}>
-			<T.Group position={[0, -height / 2 + radius, 0]}>
+		<CollisionGroups groups={GROUND_COLLISION_GROUPS}>
+			<T.Group position={[0, -PLAYER_HEIGHT / 2 + PLAYER_RADIUS, 0]}>
 				<Collider
 					sensor
 					shape={'ball'}
-					args={[radius * 1.2]}
+					args={[PLAYER_RADIUS * PLAYER_LENGTH]}
 					on:sensorenter={() => onSensorChange(1)}
 					on:sensorexit={() => onSensorChange(-1)}
 				/>
 			</T.Group>
 		</CollisionGroups>
 
-		<T.Group position.y={-height / 2}>
+		<T.Group position.y={-PLAYER_HEIGHT / 2}>
 			<T.Mesh
 				bind:ref={$context.mesh}
 				position.y={0.9}
 				receiveShadow
 				castShadow
-				geometry={new CapsuleGeometry(0.3, 1.2)}
+				geometry={new CapsuleGeometry(PLAYER_RADIUS, PLAYER_LENGTH)}
 				material={new MeshStandardMaterial({ color: '#0059BA' })}
 			/>
 		</T.Group>
