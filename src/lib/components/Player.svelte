@@ -19,6 +19,7 @@
 		type PlayerStateId,
 		type PlayerStateContext
 	} from '$lib';
+	import { Monitor, Pane } from 'svelte-tweakpane-ui';
 
 	export let position: Parameters<Vector3['set']> | undefined = undefined;
 	export let cameraFollow: (mesh?: Mesh) => void = noop;
@@ -75,6 +76,10 @@
 </script>
 
 <svelte:window on:keydown|preventDefault={onKeyDown} on:keyup|preventDefault={onKeyUp} />
+
+<Pane position="fixed" title="Jump Power">
+	<Monitor value={$context.power} graph={true} />
+</Pane>
 
 <T.Group {position}>
 	<RigidBody

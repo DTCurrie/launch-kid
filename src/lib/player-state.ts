@@ -118,8 +118,6 @@ export const createPoweringUpState = () =>
 			let next = power;
 			next += 0.5;
 
-			console.log('powering up', next);
-
 			return { power: next };
 		}
 	});
