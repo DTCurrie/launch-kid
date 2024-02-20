@@ -20,6 +20,7 @@
 		createGroundsSensoredChangedState
 	} from './player-state';
 	import { createStateMachine } from './state-machine';
+	import { playerInputs } from './player-inputs';
 
 	export let position: Parameters<Vector3['set']> | undefined = undefined;
 	export let cameraFollow: (mesh?: Mesh) => void = noop;
@@ -36,7 +37,7 @@
 			groundsSensored: 0,
 			power: 0,
 
-			keys: { up: false, down: false, left: false, right: false },
+			keys: { up: false, down: false, left: false, right: false, action: false },
 
 			forward: new Vector3(),
 			velocity: new Vector3(),
@@ -45,67 +46,28 @@
 		}
 	);
 
+	const { onKeyDown, onKeyUp } = playerInputs($context.keys);
+
 	const { start } = useTask(() => {
+		if ($state.id === 'grounded') {
+			if ($context.keys.action) {
+				transition(createPoweringUpState());
+			}
+		}
+
+		if ($state.id === 'powering-up') {
+			if (!$context.keys.action) {
+				transition(createLaunchingState());
+			}
+
+			if ($context.power >= 100) {
+				transition(createLaunchingState());
+			}
+		}
+
 		run();
 		cameraFollow($context.mesh);
 	});
-
-	const onKeyDown = (e: KeyboardEvent) => {
-		switch (e.key.toLowerCase()) {
-			case 's':
-			case 'arrowdown':
-				$context.keys.down = true;
-				break;
-			case 'w':
-			case 'arrowup':
-				$context.keys.up = true;
-				break;
-			case 'a':
-			case 'arrowleft':
-				$context.keys.left = true;
-				break;
-			case 'd':
-			case 'arrowright':
-				$context.keys.right = true;
-				break;
-			case ' ':
-				if (!$context.rigidBody) break;
-				if ($state.id === PLAYER_STATES.floating) break;
-				if ($state.id === PLAYER_STATES.grounded) {
-					transition(createPoweringUpState());
-					break;
-				}
-			default:
-				break;
-		}
-	};
-
-	const onKeyUp = (e: KeyboardEvent) => {
-		switch (e.key.toLowerCase()) {
-			case 's':
-			case 'arrowdown':
-				$context.keys.down = false;
-				break;
-			case 'w':
-			case 'arrowup':
-				$context.keys.up = false;
-				break;
-			case 'a':
-			case 'arrowleft':
-				$context.keys.left = false;
-				break;
-			case 'd':
-			case 'arrowright':
-				$context.keys.right = false;
-				break;
-			case ' ':
-				if ($state.id === PLAYER_STATES.poweringUp) {
-					transition(createLaunchingState());
-				}
-			default:
-				break;
-		}
-	};
 
 	const onSensorChange = (mod: 1 | -1) =>
 		transition(createGroundsSensoredChangedState($context.groundsSensored + mod));

@@ -1,8 +1,7 @@
 import type { Mesh, Vector2, Vector3 } from 'three';
 import { createState, type StateOptions } from './state-machine';
 import type { RigidBody as RapierRigidBody } from '@dimforge/rapier3d-compat';
-
-type Keys = 'left' | 'right' | 'down' | 'up';
+import type { PressedKeys } from './player-inputs';
 
 const PLAYER_SPEED = 2;
 const PLAYER_ROTATE_SPEED = 2;
@@ -15,7 +14,7 @@ export interface PlayerStateContext {
 	groundsSensored: number;
 	power: number;
 
-	keys: Record<Keys, boolean>;
+	keys: PressedKeys;
 
 	forward: Vector3;
 	velocity: Vector3;
