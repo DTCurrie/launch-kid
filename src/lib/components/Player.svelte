@@ -19,7 +19,7 @@
 		type PlayerStateId,
 		type PlayerStateContext
 	} from '$lib';
-	import { Monitor, Pane } from 'svelte-tweakpane-ui';
+	import { AutoObject, Folder, Monitor, Pane, Separator, ThemeUtils } from 'svelte-tweakpane-ui';
 
 	export let position: Parameters<Vector3['set']> | undefined = undefined;
 	export let cameraFollow: (mesh?: Mesh) => void = noop;
@@ -77,8 +77,9 @@
 
 <svelte:window on:keydown|preventDefault={onKeyDown} on:keyup|preventDefault={onKeyUp} />
 
-<Pane position="fixed" title="Jump Power">
-	<Monitor value={$context.power} graph={true} />
+<Pane position="fixed" title="Launch Kid" theme={ThemeUtils.presets.retro}>
+	<Monitor label="Power Level" value={$context.power} graph={true} bufferSize={200} disabled />
+	<Monitor label="Grounded" value={$context.groundsSensored !== 0} disabled />
 </Pane>
 
 <T.Group {position}>
